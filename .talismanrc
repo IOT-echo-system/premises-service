@@ -1,0 +1,4 @@
+fileignoreconfig:
+- filename: build.gradle.kts
+  checksum: 1dd1bd372faeea440142b868db53bcc2257323481ffd6de80f66d44f18a453aa
+version: ""

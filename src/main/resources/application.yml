@@ -1,0 +1,16 @@
+server:
+  port: ${PORT:9004}
+
+spring:
+  data:
+    mongodb:
+      uri: ${MONGODB_URL}/premises-service
+  application:
+    name: PREMISES-SERVICE
+
+app:
+  utils:
+    auth-service-base-url: ${AUTH_SERVICE_BASE_URL}
+    internal-access-token: ${INTERNAL_ACCESS_TOKEN}
+    validate-path: /auth/validate
+    open-api-endpoints:
