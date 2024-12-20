@@ -1,7 +1,7 @@
 package com.robotutor.premisesService.services
 
 import com.robotutor.iot.service.IdGeneratorService
-import com.robotutor.iot.utils.models.UserAuthenticationData
+import com.robotutor.iot.utils.models.UserData
 import com.robotutor.loggingstarter.logOnError
 import com.robotutor.loggingstarter.logOnSuccess
 import com.robotutor.premisesService.controllers.view.ZoneRequest
@@ -20,7 +20,7 @@ class ZoneService(
     private val zoneRepository: ZoneRepository,
     private val idGeneratorService: IdGeneratorService,
 ) {
-    fun createZone(zoneRequest: ZoneRequest, userData: UserAuthenticationData): Mono<Zone> {
+    fun createZone(zoneRequest: ZoneRequest, userData: UserData): Mono<Zone> {
         return premisesService.getPremises(zoneRequest.premisesId, userData)
             .flatMap { idGeneratorService.generateId(IdType.ZONE_ID) }
             .flatMap { zoneId ->
@@ -31,14 +31,14 @@ class ZoneService(
             .logOnError("", "Failed to add a zone in premises ${zoneRequest.premisesId}")
     }
 
-    fun getZonesByPremisesId(premisesId: PremisesId, userData: UserAuthenticationData): Flux<Zone> {
+    fun getZonesByPremisesId(premisesId: PremisesId, userData: UserData): Flux<Zone> {
         return premisesService.getPremises(premisesId, userData)
             .flatMapMany {
                 zoneRepository.findAllByPremisesId(premisesId)
             }
     }
 
-    fun getZoneByZoneId(zoneId: ZoneId, userData: UserAuthenticationData): Mono<Zone> {
+    fun getZoneByZoneId(zoneId: ZoneId, userData: UserData): Mono<Zone> {
         return zoneRepository.findByZoneId(zoneId)
             .flatMap { zone ->
                 premisesService.getPremises(zone.premisesId, userData).map { zone }

@@ -3,7 +3,7 @@ package com.robotutor.premisesService.services
 import com.robotutor.iot.exceptions.DataNotFoundException
 import com.robotutor.iot.service.IdGeneratorService
 import com.robotutor.iot.utils.createMonoError
-import com.robotutor.iot.utils.models.UserAuthenticationData
+import com.robotutor.iot.utils.models.UserData
 import com.robotutor.loggingstarter.logOnSuccess
 import com.robotutor.premisesService.controllers.view.PremisesRequest
 import com.robotutor.premisesService.exceptions.IOTError
@@ -19,7 +19,7 @@ class PremisesService(
     private val premisesRepository: PremisesRepository,
     private val idGeneratorService: IdGeneratorService,
 ) {
-    fun createPremises(premisesRequest: PremisesRequest, userData: UserAuthenticationData): Mono<Premises> {
+    fun createPremises(premisesRequest: PremisesRequest, userData: UserData): Mono<Premises> {
         return idGeneratorService.generateId(IdType.PREMISES_ID).flatMap { premisesId ->
             val premises = Premises(
                 premisesId = premisesId,
@@ -34,11 +34,11 @@ class PremisesService(
             .logOnSuccess("Failed to create premises!")
     }
 
-    fun getAllPremises(userData: UserAuthenticationData): Flux<Premises> {
+    fun getAllPremises(userData: UserData): Flux<Premises> {
         return premisesRepository.findAllByUsers_UserId(userData.userId)
     }
 
-    fun getPremises(premisesId: PremisesId, userData: UserAuthenticationData): Mono<Premises> {
+    fun getPremises(premisesId: PremisesId, userData: UserData): Mono<Premises> {
         return premisesRepository.findByPremisesIdAndUsers_UserId(premisesId, userData.userId)
             .switchIfEmpty {
                 createMonoError(DataNotFoundException(IOTError.IOT0401))

@@ -1,7 +1,7 @@
 package com.robotutor.premisesService.controllers
 
 import com.robotutor.iot.utils.filters.annotations.RequirePolicy
-import com.robotutor.iot.utils.models.UserAuthenticationData
+import com.robotutor.iot.utils.models.UserData
 import com.robotutor.premisesService.controllers.view.PremisesRequest
 import com.robotutor.premisesService.controllers.view.PremisesView
 import com.robotutor.premisesService.models.PremisesId
@@ -17,22 +17,19 @@ class PremisesController(private val premisesService: PremisesService) {
 
     @RequirePolicy("PREMISES:CREATE")
     @PostMapping
-    fun addPremises(
-        @RequestBody @Validated premisesRequest: PremisesRequest,
-        userData: UserAuthenticationData
-    ): Mono<PremisesView> {
+    fun addPremises(@RequestBody @Validated premisesRequest: PremisesRequest, userData: UserData): Mono<PremisesView> {
         return premisesService.createPremises(premisesRequest, userData).map { PremisesView.from(it) }
     }
 
     @RequirePolicy("PREMISES:READ")
     @GetMapping
-    fun getAllPremises(userData: UserAuthenticationData): Flux<PremisesView> {
+    fun getAllPremises(userData: UserData): Flux<PremisesView> {
         return premisesService.getAllPremises(userData).map { PremisesView.from(it) }
     }
 
     @RequirePolicy("PREMISES:READ")
     @GetMapping("/{premisesId}")
-    fun getPremises(@PathVariable premisesId: PremisesId, userData: UserAuthenticationData): Mono<PremisesView> {
+    fun getPremises(@PathVariable premisesId: PremisesId, userData: UserData): Mono<PremisesView> {
         return premisesService.getPremises(premisesId, userData).map { PremisesView.from(it) }
     }
 
