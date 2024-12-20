@@ -8,11 +8,11 @@ import org.springframework.context.annotation.ComponentScan
 @SpringBootApplication
 @ComponentScan(basePackages = ["com.robotutor"])
 @ConfigurationPropertiesScan(basePackages = ["com.robotutor"])
-class PremisesService {
+class PremisesApplication {
     companion object {
         @JvmStatic
         fun main(args: Array<String>) {
-            SpringApplicationBuilder(PremisesService::class.java).run(*args)
+            SpringApplicationBuilder(PremisesApplication::class.java).run(*args)
         }
     }
 }
