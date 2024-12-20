@@ -25,7 +25,7 @@ class PremisesService(
                 premisesId = premisesId,
                 name = premisesRequest.name,
                 address = Address(street = "", city = "", country = ""),
-                users = listOf(UserWithRole(userId = userData.userId, role = "PREMISES_OWNER")),
+                users = listOf(UserWithRole(userId = userData.userId, role = Role.OWNER)),
                 createdBy = userData.userId
             )
             premisesRepository.save(premises)

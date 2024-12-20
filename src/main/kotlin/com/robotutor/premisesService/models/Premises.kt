@@ -24,8 +24,12 @@ data class Premises(
 )
 
 data class Address(val street: String, val city: String, val country: String)
-data class UserWithRole(val userId: UserId, val role: RoleId)
+data class UserWithRole(val userId: UserId, val role: Role)
+
+enum class Role {
+    OWNER, ADMIN, USER
+}
 
 typealias PremisesId = String
 typealias UserId = String
-typealias RoleId = String
+
