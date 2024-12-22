@@ -43,7 +43,7 @@ data class Address(
     val city: String,
     val district: String,
     val state: String,
-    val zipCode: String
+    val zipCode: Int
 ) {
     companion object {
         fun from(address: AddressRequest): Address {

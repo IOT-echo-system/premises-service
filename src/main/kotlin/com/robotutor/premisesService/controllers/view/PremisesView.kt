@@ -3,6 +3,8 @@ package com.robotutor.premisesService.controllers.view
 import com.robotutor.premisesService.models.Address
 import com.robotutor.premisesService.models.Premises
 import com.robotutor.premisesService.models.PremisesId
+import jakarta.validation.constraints.Max
+import jakarta.validation.constraints.Min
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Size
 import java.time.LocalDateTime
@@ -32,9 +34,9 @@ data class AddressRequest(
     @field:Size(min = 2, max = 30, message = "State should not be less than 2 characters or more than 30 characters")
     val state: String,
 
-    @field:NotBlank(message = "Zip Code is required")
-    @field:Size(min = 6, max = 6, message = "Zip Code should be 6 characters")
-    val zipCode: String
+    @field:Min(100000, message = "Zip Code should be at least 6 digits")
+    @field:Max(999999, message = "Zip Code should not exceed 6 digits")
+    val zipCode: Int
 )
 
 data class PremisesView(
