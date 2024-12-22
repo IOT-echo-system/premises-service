@@ -1,13 +1,18 @@
 package com.robotutor.premisesService.services
 
+import com.robotutor.iot.auditOnError
+import com.robotutor.iot.auditOnSuccess
 import com.robotutor.iot.exceptions.DataNotFoundException
 import com.robotutor.iot.service.IdGeneratorService
 import com.robotutor.iot.utils.createMonoError
 import com.robotutor.iot.utils.models.UserData
+import com.robotutor.iot.utils.utils.toMap
 import com.robotutor.loggingstarter.logOnSuccess
 import com.robotutor.premisesService.controllers.view.PremisesRequest
 import com.robotutor.premisesService.exceptions.IOTError
-import com.robotutor.premisesService.models.*
+import com.robotutor.premisesService.models.IdType
+import com.robotutor.premisesService.models.Premises
+import com.robotutor.premisesService.models.PremisesId
 import com.robotutor.premisesService.repositories.PremisesRepository
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Flux
@@ -21,15 +26,11 @@ class PremisesService(
 ) {
     fun createPremises(premisesRequest: PremisesRequest, userData: UserData): Mono<Premises> {
         return idGeneratorService.generateId(IdType.PREMISES_ID).flatMap { premisesId ->
-            val premises = Premises(
-                premisesId = premisesId,
-                name = premisesRequest.name,
-                address = Address(street = "", city = "", country = ""),
-                users = listOf(UserWithRole(userId = userData.userId, role = Role.OWNER)),
-                createdBy = userData.userId
-            )
+            val premises = Premises.from(premisesId, premisesRequest, userData.userId)
             premisesRepository.save(premises)
         }
+            .auditOnSuccess("PREMISES_CREATE", premisesRequest.toMap())
+            .auditOnError("PREMISES_CREATE", premisesRequest.toMap())
             .logOnSuccess("Successfully created premises!")
             .logOnSuccess("Failed to create premises!")
     }

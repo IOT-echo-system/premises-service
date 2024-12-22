@@ -1,7 +1,10 @@
 package com.robotutor.premisesService.services
 
+import com.robotutor.iot.auditOnError
+import com.robotutor.iot.auditOnSuccess
 import com.robotutor.iot.service.IdGeneratorService
 import com.robotutor.iot.utils.models.UserData
+import com.robotutor.iot.utils.utils.toMap
 import com.robotutor.loggingstarter.logOnError
 import com.robotutor.loggingstarter.logOnSuccess
 import com.robotutor.premisesService.controllers.view.ZoneRequest
@@ -27,6 +30,8 @@ class ZoneService(
                 val zone = Zone(zoneId = zoneId, premisesId = zoneRequest.premisesId, name = zoneRequest.name)
                 zoneRepository.save(zone)
             }
+            .auditOnSuccess("ZONE_CREATE", zoneRequest.toMap())
+            .auditOnError("ZONE_CREATE", zoneRequest.toMap())
             .logOnSuccess("Successfully added a zone in premises ${zoneRequest.premisesId}")
             .logOnError("", "Failed to add a zone in premises ${zoneRequest.premisesId}")
     }
