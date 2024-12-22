@@ -3,6 +3,7 @@ package com.robotutor.premisesService.controllers.view
 import com.robotutor.premisesService.models.Address
 import com.robotutor.premisesService.models.Premises
 import com.robotutor.premisesService.models.PremisesId
+import jakarta.validation.Valid
 import jakarta.validation.constraints.Max
 import jakarta.validation.constraints.Min
 import jakarta.validation.constraints.NotBlank
@@ -13,6 +14,8 @@ data class PremisesRequest(
     @field:NotBlank(message = "Name is required")
     @field:Size(min = 4, max = 30, message = "Name should not be less than 4 char or more than 30 char")
     val name: String,
+
+    @field:Valid
     val address: AddressRequest,
 )
 
