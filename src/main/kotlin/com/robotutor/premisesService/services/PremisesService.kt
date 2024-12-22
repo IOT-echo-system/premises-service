@@ -25,12 +25,14 @@ class PremisesService(
     private val idGeneratorService: IdGeneratorService,
 ) {
     fun createPremises(premisesRequest: PremisesRequest, userData: UserData): Mono<Premises> {
+        val premisesRequestMap = premisesRequest.toMap().toMutableMap()
         return idGeneratorService.generateId(IdType.PREMISES_ID).flatMap { premisesId ->
+            premisesRequestMap["premisesId"] = premisesId
             val premises = Premises.from(premisesId, premisesRequest, userData.userId)
             premisesRepository.save(premises)
+                .auditOnSuccess("PREMISES_CREATE", premisesRequestMap)
         }
-            .auditOnSuccess("PREMISES_CREATE", premisesRequest.toMap())
-            .auditOnError("PREMISES_CREATE", premisesRequest.toMap())
+            .auditOnError("PREMISES_CREATE", premisesRequestMap)
             .logOnSuccess("Successfully created premises!")
             .logOnSuccess("Failed to create premises!")
     }

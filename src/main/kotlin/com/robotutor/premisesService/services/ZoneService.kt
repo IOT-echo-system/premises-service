@@ -24,14 +24,16 @@ class ZoneService(
     private val idGeneratorService: IdGeneratorService,
 ) {
     fun createZone(zoneRequest: ZoneRequest, userData: UserData): Mono<Zone> {
+        val zoneRequestMap = zoneRequest.toMap().toMutableMap()
         return premisesService.getPremises(zoneRequest.premisesId, userData)
             .flatMap { idGeneratorService.generateId(IdType.ZONE_ID) }
             .flatMap { zoneId ->
+                zoneRequestMap["zoneId"] = zoneId
                 val zone = Zone(zoneId = zoneId, premisesId = zoneRequest.premisesId, name = zoneRequest.name)
                 zoneRepository.save(zone)
+                    .auditOnSuccess("ZONE_CREATE", zoneRequestMap)
             }
-            .auditOnSuccess("ZONE_CREATE", zoneRequest.toMap())
-            .auditOnError("ZONE_CREATE", zoneRequest.toMap())
+            .auditOnError("ZONE_CREATE", zoneRequestMap)
             .logOnSuccess("Successfully added a zone in premises ${zoneRequest.premisesId}")
             .logOnError("", "Failed to add a zone in premises ${zoneRequest.premisesId}")
     }
