@@ -3,7 +3,9 @@ package com.robotutor.premisesService.services
 import com.robotutor.iot.auditOnError
 import com.robotutor.iot.auditOnSuccess
 import com.robotutor.iot.exceptions.DataNotFoundException
+import com.robotutor.iot.exceptions.UnAuthorizedException
 import com.robotutor.iot.service.IdGeneratorService
+import com.robotutor.iot.utils.createMono
 import com.robotutor.iot.utils.createMonoError
 import com.robotutor.iot.utils.models.UserData
 import com.robotutor.iot.utils.utils.toMap
@@ -13,6 +15,7 @@ import com.robotutor.premisesService.exceptions.IOTError
 import com.robotutor.premisesService.models.IdType
 import com.robotutor.premisesService.models.Premises
 import com.robotutor.premisesService.models.PremisesId
+import com.robotutor.premisesService.models.Role
 import com.robotutor.premisesService.repositories.PremisesRepository
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Flux
@@ -50,8 +53,16 @@ class PremisesService(
 
     fun updatePremises(premisesId: PremisesId, premisesRequest: PremisesRequest, userData: UserData): Mono<Premises> {
         val premisesRequestMap = premisesRequest.toMap().toMutableMap()
-        premisesRequestMap[premisesId] = premisesId
+        premisesRequestMap["premisesId"] = premisesId
         return this.getPremises(premisesId, userData)
+            .flatMap { premises ->
+                val currentUser = premises.users.find { it.userId == userData.userId }!!
+                if (currentUser.role == Role.OWNER) {
+                    createMono(premises)
+                } else {
+                    createMonoError(UnAuthorizedException(IOTError.IOT0402))
+                }
+            }
             .flatMap {
                 premisesRepository.save(it.update(premisesRequest))
             }
