@@ -47,5 +47,18 @@ class PremisesService(
                 createMonoError(DataNotFoundException(IOTError.IOT0401))
             }
     }
+
+    fun updatePremises(premisesId: PremisesId, premisesRequest: PremisesRequest, userData: UserData): Mono<Premises> {
+        val premisesRequestMap = premisesRequest.toMap().toMutableMap()
+        premisesRequestMap[premisesId] = premisesId
+        return this.getPremises(premisesId, userData)
+            .flatMap {
+                premisesRepository.save(it.update(premisesRequest))
+            }
+            .auditOnSuccess("PREMISES_UPDATE", premisesRequestMap)
+            .auditOnError("PREMISES_UPDATE", premisesRequestMap)
+            .logOnSuccess("Successfully updated premises!", additionalDetails = premisesRequestMap)
+            .logOnSuccess("Failed to update premises!", additionalDetails = premisesRequestMap)
+    }
 }
 

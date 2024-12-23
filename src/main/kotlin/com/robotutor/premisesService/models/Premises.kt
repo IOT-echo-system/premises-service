@@ -18,12 +18,18 @@ data class Premises(
     var id: ObjectId? = null,
     @Indexed(unique = true)
     val premisesId: PremisesId,
-    val name: String,
+    var name: String,
     val createdBy: UserId,
     val address: Address,
     val users: List<UserWithRole>,
     val createdAt: LocalDateTime = LocalDateTime.now(),
 ) {
+    fun update(premisesRequest: PremisesRequest): Premises {
+        this.name = premisesRequest.name
+        this.address.update(premisesRequest.address)
+        return this
+    }
+
     companion object {
         fun from(premisesId: String, premisesRequest: PremisesRequest, userId: String): Premises {
             return Premises(
@@ -38,13 +44,23 @@ data class Premises(
 }
 
 data class Address(
-    val address1: String,
-    val address2: String? = null,
-    val city: String,
-    val district: String,
-    val state: String,
-    val zipCode: Int
+    var address1: String,
+    var address2: String? = null,
+    var city: String,
+    var district: String,
+    var state: String,
+    var zipCode: Int
 ) {
+    fun update(address: AddressRequest): Address {
+        this.address1 = address.address1
+        this.address2 = address.address2
+        this.city = address.city
+        this.district = address.district
+        this.state = address.state
+        this.zipCode = address.zipCode
+        return this
+    }
+
     companion object {
         fun from(address: AddressRequest): Address {
             return Address(
