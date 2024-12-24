@@ -51,10 +51,8 @@ class PremisesService(
             }
     }
 
-    fun updatePremises(premisesId: PremisesId, premisesRequest: PremisesRequest, userData: UserData): Mono<Premises> {
-        val premisesRequestMap = premisesRequest.toMap().toMutableMap()
-        premisesRequestMap["premisesId"] = premisesId
-        return this.getPremises(premisesId, userData)
+    fun getPremisesForOwner(premisesId: PremisesId, userData: UserData): Mono<Premises> {
+        return premisesRepository.findByPremisesIdAndUsers_UserId(premisesId, userData.userId)
             .flatMap { premises ->
                 val currentUser = premises.users.find { it.userId == userData.userId }!!
                 if (currentUser.role == Role.OWNER) {
@@ -63,6 +61,15 @@ class PremisesService(
                     createMonoError(UnAuthorizedException(IOTError.IOT0402))
                 }
             }
+            .switchIfEmpty {
+                createMonoError(DataNotFoundException(IOTError.IOT0401))
+            }
+    }
+
+    fun updatePremises(premisesId: PremisesId, premisesRequest: PremisesRequest, userData: UserData): Mono<Premises> {
+        val premisesRequestMap = premisesRequest.toMap().toMutableMap()
+        premisesRequestMap["premisesId"] = premisesId
+        return this.getPremisesForOwner(premisesId, userData)
             .flatMap {
                 premisesRepository.save(it.update(premisesRequest))
             }

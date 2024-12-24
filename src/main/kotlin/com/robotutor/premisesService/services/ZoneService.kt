@@ -25,7 +25,7 @@ class ZoneService(
 ) {
     fun createZone(zoneRequest: ZoneRequest, userData: UserData): Mono<Zone> {
         val zoneRequestMap = zoneRequest.toMap().toMutableMap()
-        return premisesService.getPremises(zoneRequest.premisesId, userData)
+        return premisesService.getPremisesForOwner(zoneRequest.premisesId, userData)
             .flatMap { idGeneratorService.generateId(IdType.ZONE_ID) }
             .flatMap { zoneId ->
                 zoneRequestMap["zoneId"] = zoneId
