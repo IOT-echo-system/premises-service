@@ -9,6 +9,7 @@ import com.robotutor.iot.utils.createMono
 import com.robotutor.iot.utils.createMonoError
 import com.robotutor.iot.utils.models.UserData
 import com.robotutor.iot.utils.utils.toMap
+import com.robotutor.loggingstarter.logOnError
 import com.robotutor.loggingstarter.logOnSuccess
 import com.robotutor.premisesService.controllers.view.PremisesRequest
 import com.robotutor.premisesService.exceptions.IOTError
@@ -37,7 +38,7 @@ class PremisesService(
         }
             .auditOnError("PREMISES_CREATE", premisesRequestMap)
             .logOnSuccess("Successfully created premises!")
-            .logOnSuccess("Failed to create premises!")
+            .logOnError("", "Failed to create premises!")
     }
 
     fun getAllPremises(userData: UserData): Flux<Premises> {
@@ -76,7 +77,7 @@ class PremisesService(
             .auditOnSuccess("PREMISES_UPDATE", premisesRequestMap)
             .auditOnError("PREMISES_UPDATE", premisesRequestMap)
             .logOnSuccess("Successfully updated premises!", additionalDetails = premisesRequestMap)
-            .logOnSuccess("Failed to update premises!", additionalDetails = premisesRequestMap)
+            .logOnError("", "Failed to update premises!", additionalDetails = premisesRequestMap)
     }
 }
 

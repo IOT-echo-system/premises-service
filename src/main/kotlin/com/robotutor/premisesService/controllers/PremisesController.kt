@@ -40,7 +40,13 @@ class PremisesController(private val premisesService: PremisesService) {
         @RequestBody @Validated premisesRequest: PremisesRequest,
         userData: UserData
     ): Mono<PremisesView> {
-        return premisesService.updatePremises(premisesId,premisesRequest, userData).map { PremisesView.from(it) }
+        return premisesService.updatePremises(premisesId, premisesRequest, userData).map { PremisesView.from(it) }
+    }
+
+    @RequirePolicy("PREMISES:UPDATE")
+    @GetMapping("/{premisesId}/owner")
+    fun premisesByOwner(@PathVariable premisesId: PremisesId, userData: UserData): Mono<PremisesView> {
+        return premisesService.getPremisesForOwner(premisesId, userData).map { PremisesView.from(it) }
     }
 
 }
