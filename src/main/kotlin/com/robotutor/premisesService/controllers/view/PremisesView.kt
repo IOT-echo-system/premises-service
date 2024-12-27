@@ -25,10 +25,6 @@ data class AddressRequest(
     val address1: String,
     val address2: String? = null,
 
-    @field:NotBlank(message = "City is required")
-    @field:Size(min = 4, max = 30, message = "City should not be less than 4 characters or more than 30 characters")
-    val city: String,
-
     @field:NotBlank(message = "District is required")
     @field:Size(min = 4, max = 30, message = "District should not be less than 4 characters or more than 30 characters")
     val district: String,
@@ -37,9 +33,9 @@ data class AddressRequest(
     @field:Size(min = 2, max = 30, message = "State should not be less than 2 characters or more than 30 characters")
     val state: String,
 
-    @field:Min(100000, message = "Zip Code should be at least 6 digits")
-    @field:Max(999999, message = "Zip Code should not exceed 6 digits")
-    val zipCode: Int
+    @field:Min(100000, message = "Pincode should be at least 6 digits")
+    @field:Max(999999, message = "Pincode should not exceed 6 digits")
+    val pincode: Int
 )
 
 data class PremisesView(

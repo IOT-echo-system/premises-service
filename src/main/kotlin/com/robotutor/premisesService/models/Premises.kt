@@ -46,18 +46,16 @@ data class Premises(
 data class Address(
     var address1: String,
     var address2: String? = null,
-    var city: String,
     var district: String,
     var state: String,
-    var zipCode: Int
+    var pincode: Int
 ) {
     fun update(address: AddressRequest): Address {
         this.address1 = address.address1
         this.address2 = address.address2
-        this.city = address.city
         this.district = address.district
         this.state = address.state
-        this.zipCode = address.zipCode
+        this.pincode = address.pincode
         return this
     }
 
@@ -66,10 +64,9 @@ data class Address(
             return Address(
                 address1 = address.address1,
                 address2 = address.address2,
-                city = address.city,
                 district = address.district,
                 state = address.state,
-                zipCode = address.zipCode
+                pincode = address.pincode
             )
         }
     }
