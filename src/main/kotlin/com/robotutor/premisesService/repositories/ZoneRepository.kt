@@ -1,5 +1,6 @@
 package com.robotutor.premisesService.repositories
 
+import com.robotutor.premisesService.models.PremisesId
 import com.robotutor.premisesService.models.Zone
 import com.robotutor.premisesService.models.ZoneId
 import org.springframework.data.repository.reactive.ReactiveCrudRepository
@@ -9,6 +10,6 @@ import reactor.core.publisher.Mono
 
 @Repository
 interface ZoneRepository : ReactiveCrudRepository<Zone, ZoneId> {
-    fun findAllByPremisesId(premisesId: String): Flux<Zone>
-    fun findByZoneId(zoneId: String): Mono<Zone>
+    fun findAllByPremisesId(premisesId: PremisesId): Flux<Zone>
+    fun findByPremisesIdAndZoneId(premisesId: PremisesId, zoneId: ZoneId): Mono<Zone>
 }

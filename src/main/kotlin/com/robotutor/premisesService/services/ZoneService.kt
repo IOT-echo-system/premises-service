@@ -23,19 +23,19 @@ class ZoneService(
     private val zoneRepository: ZoneRepository,
     private val idGeneratorService: IdGeneratorService,
 ) {
-    fun createZone(zoneRequest: ZoneRequest, userData: UserData): Mono<Zone> {
+    fun createZone(premisesId: PremisesId, zoneRequest: ZoneRequest, userData: UserData): Mono<Zone> {
         val zoneRequestMap = zoneRequest.toMap().toMutableMap()
-        return premisesService.getPremisesForOwner(zoneRequest.premisesId, userData)
+        return premisesService.getPremisesForOwner(premisesId, userData)
             .flatMap { idGeneratorService.generateId(IdType.ZONE_ID) }
             .flatMap { zoneId ->
                 zoneRequestMap["zoneId"] = zoneId
-                val zone = Zone(zoneId = zoneId, premisesId = zoneRequest.premisesId, name = zoneRequest.name)
+                val zone = Zone(zoneId = zoneId, premisesId = premisesId, name = zoneRequest.name)
                 zoneRepository.save(zone)
                     .auditOnSuccess("ZONE_CREATE", zoneRequestMap)
             }
             .auditOnError("ZONE_CREATE", zoneRequestMap)
-            .logOnSuccess("Successfully added a zone in premises ${zoneRequest.premisesId}")
-            .logOnError("", "Failed to add a zone in premises ${zoneRequest.premisesId}")
+            .logOnSuccess("Successfully added a zone in premises $premisesId")
+            .logOnError("", "Failed to add a zone in premises $premisesId")
     }
 
     fun getZonesByPremisesId(premisesId: PremisesId, userData: UserData): Flux<Zone> {
@@ -45,11 +45,9 @@ class ZoneService(
             }
     }
 
-    fun getZoneByZoneId(zoneId: ZoneId, userData: UserData): Mono<Zone> {
-        return zoneRepository.findByZoneId(zoneId)
-            .flatMap { zone ->
-                premisesService.getPremises(zone.premisesId, userData).map { zone }
-            }
+    fun getZoneByZoneId(premisesId: PremisesId, zoneId: ZoneId, userData: UserData): Mono<Zone> {
+        return premisesService.getPremises(premisesId, userData)
+            .flatMap { zoneRepository.findByPremisesIdAndZoneId(premisesId, zoneId) }
     }
 }
 

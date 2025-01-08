@@ -13,24 +13,28 @@ import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 
 @RestController
-@RequestMapping("/zones")
+@RequestMapping("/premises/{premisesId}/zones")
 class ZoneController(private val zoneService: ZoneService) {
 
     @RequirePolicy("ZONE:CREATE")
     @PostMapping
-    fun createZone(@RequestBody @Validated zoneRequest: ZoneRequest, userData: UserData): Mono<ZoneView> {
-        return zoneService.createZone(zoneRequest, userData).map { ZoneView.from(it) }
+    fun createZone(
+        @PathVariable premisesId: PremisesId,
+        @RequestBody @Validated zoneRequest: ZoneRequest,
+        userData: UserData
+    ): Mono<ZoneView> {
+        return zoneService.createZone(premisesId, zoneRequest, userData).map { ZoneView.from(it) }
     }
 
     @RequirePolicy("ZONE:READ")
-    @GetMapping("/premises/{premisesId}")
+    @GetMapping
     fun getZones(@PathVariable premisesId: PremisesId, userData: UserData): Flux<ZoneView> {
         return zoneService.getZonesByPremisesId(premisesId, userData).map { ZoneView.from(it) }
     }
 
     @RequirePolicy("ZONE:READ")
     @GetMapping("/{zoneId}")
-    fun getZone(@PathVariable zoneId: ZoneId, userData: UserData): Mono<ZoneView> {
-        return zoneService.getZoneByZoneId(zoneId, userData).map { ZoneView.from(it) }
+    fun getZone(@PathVariable zoneId: ZoneId, userData: UserData, @PathVariable premisesId: String): Mono<ZoneView> {
+        return zoneService.getZoneByZoneId(premisesId, zoneId, userData).map { ZoneView.from(it) }
     }
 }
