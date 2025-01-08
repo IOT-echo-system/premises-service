@@ -34,7 +34,7 @@ class ZoneController(private val zoneService: ZoneService) {
 
     @RequirePolicy("ZONE:READ")
     @GetMapping("/{zoneId}")
-    fun getZone(@PathVariable zoneId: ZoneId, userData: UserData, @PathVariable premisesId: String): Mono<ZoneView> {
+    fun getZone(@PathVariable zoneId: ZoneId, userData: UserData, @PathVariable premisesId: PremisesId): Mono<ZoneView> {
         return zoneService.getZoneByZoneId(premisesId, zoneId, userData).map { ZoneView.from(it) }
     }
 }

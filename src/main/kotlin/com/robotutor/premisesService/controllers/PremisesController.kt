@@ -1,6 +1,7 @@
 package com.robotutor.premisesService.controllers
 
 import com.robotutor.iot.utils.filters.annotations.RequirePolicy
+import com.robotutor.iot.utils.models.PremisesData
 import com.robotutor.iot.utils.models.UserData
 import com.robotutor.premisesService.controllers.view.PremisesRequest
 import com.robotutor.premisesService.controllers.view.PremisesView
@@ -18,19 +19,19 @@ class PremisesController(private val premisesService: PremisesService) {
     @RequirePolicy("PREMISES:CREATE")
     @PostMapping
     fun addPremises(@RequestBody @Validated premisesRequest: PremisesRequest, userData: UserData): Mono<PremisesView> {
-        return premisesService.createPremises(premisesRequest, userData).map { PremisesView.from(it) }
+        return premisesService.createPremises(premisesRequest, userData).map { PremisesView.from(it, userData.userId) }
     }
 
     @RequirePolicy("PREMISES:READ")
     @GetMapping
     fun getAllPremises(userData: UserData): Flux<PremisesView> {
-        return premisesService.getAllPremises(userData).map { PremisesView.from(it) }
+        return premisesService.getAllPremises(userData).map { PremisesView.from(it, userData.userId) }
     }
 
     @RequirePolicy("PREMISES:READ")
     @GetMapping("/{premisesId}")
     fun getPremises(@PathVariable premisesId: PremisesId, userData: UserData): Mono<PremisesView> {
-        return premisesService.getPremises(premisesId, userData).map { PremisesView.from(it) }
+        return premisesService.getPremises(premisesId, userData).map { PremisesView.from(it, userData.userId) }
     }
 
     @RequirePolicy("PREMISES:UPDATE")
@@ -38,15 +39,11 @@ class PremisesController(private val premisesService: PremisesService) {
     fun updatePremises(
         @PathVariable premisesId: PremisesId,
         @RequestBody @Validated premisesRequest: PremisesRequest,
-        userData: UserData
+        userData: UserData,
+        premisesData: PremisesData
     ): Mono<PremisesView> {
-        return premisesService.updatePremises(premisesId, premisesRequest, userData).map { PremisesView.from(it) }
+        return premisesService.updatePremises(premisesId, premisesRequest, userData).map {
+            PremisesView.from(it, userData.userId)
+        }
     }
-
-    @RequirePolicy("PREMISES:UPDATE")
-    @GetMapping("/{premisesId}/owner")
-    fun premisesByOwner(@PathVariable premisesId: PremisesId, userData: UserData): Mono<PremisesView> {
-        return premisesService.getPremisesForOwner(premisesId, userData).map { PremisesView.from(it) }
-    }
-
 }
