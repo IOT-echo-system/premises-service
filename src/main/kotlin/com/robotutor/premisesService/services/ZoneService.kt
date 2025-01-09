@@ -2,7 +2,13 @@ package com.robotutor.premisesService.services
 
 import com.robotutor.iot.auditOnError
 import com.robotutor.iot.auditOnSuccess
+import com.robotutor.iot.exceptions.UnAuthorizedException
 import com.robotutor.iot.service.IdGeneratorService
+import com.robotutor.iot.utils.createMono
+import com.robotutor.iot.utils.createMonoError
+import com.robotutor.iot.utils.exceptions.IOTError
+import com.robotutor.iot.utils.gateway.views.PremisesRole
+import com.robotutor.iot.utils.models.PremisesData
 import com.robotutor.iot.utils.models.UserData
 import com.robotutor.iot.utils.utils.toMap
 import com.robotutor.loggingstarter.logOnError
@@ -23,19 +29,23 @@ class ZoneService(
     private val zoneRepository: ZoneRepository,
     private val idGeneratorService: IdGeneratorService,
 ) {
-    fun createZone(premisesId: PremisesId, zoneRequest: ZoneRequest, userData: UserData): Mono<Zone> {
-        val zoneRequestMap = zoneRequest.toMap().toMutableMap()
-        return premisesService.getPremisesForOwner(premisesId, userData)
-            .flatMap { idGeneratorService.generateId(IdType.ZONE_ID) }
+    fun createZone(zoneRequest: ZoneRequest, userData: UserData, premisesData: PremisesData): Mono<Zone> {
+        val zoneRequestMap = userData.toMap().toMutableMap()
+        zoneRequestMap["premisesId"] = premisesData.premisesId
+        return createMono(premisesData.user.role == PremisesRole.OWNER)
+            .flatMap {
+                if (it) idGeneratorService.generateId(IdType.ZONE_ID)
+                else createMonoError(UnAuthorizedException(IOTError.IOT0104))
+            }
             .flatMap { zoneId ->
                 zoneRequestMap["zoneId"] = zoneId
-                val zone = Zone(zoneId = zoneId, premisesId = premisesId, name = zoneRequest.name)
+                val zone = Zone(zoneId = zoneId, premisesId = premisesData.premisesId, name = zoneRequest.name)
                 zoneRepository.save(zone)
                     .auditOnSuccess("ZONE_CREATE", zoneRequestMap)
             }
             .auditOnError("ZONE_CREATE", zoneRequestMap)
-            .logOnSuccess("Successfully added a zone in premises $premisesId")
-            .logOnError("", "Failed to add a zone in premises $premisesId")
+            .logOnSuccess("Successfully added a zone in premises $zoneRequest")
+            .logOnError("", "Failed to add a zone in premises $zoneRequest")
     }
 
     fun getZonesByPremisesId(premisesId: PremisesId, userData: UserData): Flux<Zone> {
@@ -48,6 +58,30 @@ class ZoneService(
     fun getZoneByZoneId(premisesId: PremisesId, zoneId: ZoneId, userData: UserData): Mono<Zone> {
         return premisesService.getPremises(premisesId, userData)
             .flatMap { zoneRepository.findByPremisesIdAndZoneId(premisesId, zoneId) }
+    }
+
+    fun updateZoneName(
+        zoneId: ZoneId,
+        zoneRequest: ZoneRequest,
+        userData: UserData,
+        premisesData: PremisesData
+    ): Mono<Zone> {
+        val zoneRequestMap = zoneRequest.toMap().toMutableMap()
+        zoneRequestMap["zoneId"] = zoneId
+        zoneRequestMap["premisesId"] = premisesData.premisesId
+
+        return createMono(premisesData.user.role == PremisesRole.OWNER)
+            .flatMap {
+                if (it) zoneRepository.findByPremisesIdAndZoneId(premisesData.premisesId, zoneId)
+                else createMonoError(UnAuthorizedException(IOTError.IOT0104))
+            }
+            .flatMap { zone ->
+                zoneRepository.save(zone.updateName(zoneRequest.name))
+                    .auditOnSuccess("ZONE_UPDATE", zoneRequestMap)
+            }
+            .auditOnError("ZONE_UPDATE", zoneRequestMap)
+            .logOnSuccess("Successfully updated a zone name", additionalDetails = zoneRequestMap)
+            .logOnError("", "Failed to update zone name", additionalDetails = zoneRequestMap)
     }
 }
 

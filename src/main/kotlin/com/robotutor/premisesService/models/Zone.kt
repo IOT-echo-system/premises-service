@@ -17,8 +17,13 @@ data class Zone(
     @Indexed(unique = true)
     val zoneId: ZoneId,
     val premisesId: PremisesId,
-    val name: String,
+    var name: String,
     val createdAt: LocalDateTime = LocalDateTime.now()
-)
+) {
+    fun updateName(name: String): Zone {
+        this.name = name
+        return this;
+    }
+}
 
 typealias ZoneId = String
