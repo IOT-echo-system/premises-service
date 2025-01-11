@@ -13,10 +13,7 @@ import com.robotutor.loggingstarter.logOnError
 import com.robotutor.loggingstarter.logOnSuccess
 import com.robotutor.premisesService.controllers.view.PremisesRequest
 import com.robotutor.premisesService.exceptions.IOTError
-import com.robotutor.premisesService.models.IdType
-import com.robotutor.premisesService.models.Premises
-import com.robotutor.premisesService.models.PremisesId
-import com.robotutor.premisesService.models.Role
+import com.robotutor.premisesService.models.*
 import com.robotutor.premisesService.repositories.PremisesRepository
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Flux
@@ -78,6 +75,13 @@ class PremisesService(
             .auditOnError("PREMISES_UPDATE", premisesRequestMap)
             .logOnSuccess("Successfully updated premises!", additionalDetails = premisesRequestMap)
             .logOnError("", "Failed to update premises!", additionalDetails = premisesRequestMap)
+    }
+
+    fun addZone(zone: Zone, userData: UserData): Mono<Premises> {
+        return premisesRepository.findByPremisesIdAndUsers_UserId(zone.premisesId, userData.userId)
+            .flatMap { premises->
+                premisesRepository.save(premises.addZone(zone.zoneId))
+            }
     }
 }
 

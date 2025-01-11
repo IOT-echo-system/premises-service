@@ -23,10 +23,16 @@ data class Premises(
     val address: Address,
     val users: List<UserWithRole>,
     val createdAt: LocalDateTime = LocalDateTime.now(),
+    val zones: Set<ZoneId> = emptySet()
 ) {
     fun update(premisesRequest: PremisesRequest): Premises {
         this.name = premisesRequest.name
         this.address.update(premisesRequest.address)
+        return this
+    }
+
+    fun addZone(zoneId: ZoneId): Premises {
+        this.zones.plus(zoneId)
         return this
     }
 

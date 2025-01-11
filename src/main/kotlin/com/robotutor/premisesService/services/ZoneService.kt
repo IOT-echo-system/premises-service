@@ -3,6 +3,7 @@ package com.robotutor.premisesService.services
 import com.robotutor.iot.auditOnError
 import com.robotutor.iot.auditOnSuccess
 import com.robotutor.iot.exceptions.UnAuthorizedException
+import com.robotutor.iot.models.AddWidgetMessage
 import com.robotutor.iot.service.IdGeneratorService
 import com.robotutor.iot.utils.createMono
 import com.robotutor.iot.utils.createMonoError
@@ -43,6 +44,9 @@ class ZoneService(
                 zoneRepository.save(zone)
                     .auditOnSuccess("ZONE_CREATE", zoneRequestMap)
             }
+            .flatMap { zone ->
+                premisesService.addZone(zone, userData).map { zone }
+            }
             .auditOnError("ZONE_CREATE", zoneRequestMap)
             .logOnSuccess("Successfully added a zone in premises $zoneRequest")
             .logOnError("", "Failed to add a zone in premises $zoneRequest")
@@ -82,6 +86,13 @@ class ZoneService(
             .auditOnError("ZONE_UPDATE", zoneRequestMap)
             .logOnSuccess("Successfully updated a zone name", additionalDetails = zoneRequestMap)
             .logOnError("", "Failed to update zone name", additionalDetails = zoneRequestMap)
+    }
+
+    fun addWidget(message: AddWidgetMessage, premisesData: PremisesData, userData: UserData): Mono<Zone> {
+        return zoneRepository.findByPremisesIdAndZoneId(premisesData.premisesId, message.zoneId)
+            .flatMap {
+                zoneRepository.save(it.addWidget(message.widgetId))
+            }
     }
 }
 

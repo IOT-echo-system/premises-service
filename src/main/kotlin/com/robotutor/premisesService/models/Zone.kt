@@ -18,11 +18,17 @@ data class Zone(
     val zoneId: ZoneId,
     val premisesId: PremisesId,
     var name: String,
-    val createdAt: LocalDateTime = LocalDateTime.now()
+    val createdAt: LocalDateTime = LocalDateTime.now(),
+    val widgets: Set<String> = emptySet()
 ) {
     fun updateName(name: String): Zone {
         this.name = name
         return this;
+    }
+
+    fun addWidget(widgetId: String): Zone {
+        this.widgets.plus(widgetId)
+        return this
     }
 }
 
