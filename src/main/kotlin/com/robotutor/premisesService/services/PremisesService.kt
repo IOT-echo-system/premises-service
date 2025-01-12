@@ -53,7 +53,7 @@ class PremisesService(
     }
 
     fun getPremises(premisesId: PremisesId, userData: UserData): Mono<Premises> {
-        return cacheService.retrieve("premises::$premisesId-${userData.userId}") {
+        return cacheService.retrieve("premises::$premisesId-${userData.userId}", Premises::class.java) {
             premisesRepository.findByPremisesIdAndUsers_UserId(premisesId, userData.userId)
                 .switchIfEmpty {
                     createMonoError(DataNotFoundException(IOTError.IOT0401))
