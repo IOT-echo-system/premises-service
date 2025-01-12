@@ -28,6 +28,3 @@ app:
     auth-service-base-url: ${AUTH_SERVICE_BASE_URL:localhost}
     internal-access-token: ${INTERNAL_ACCESS_TOKEN:localhost}
     premises-service-base-url: ${PREMISES_SERVICE_BASE_URL:localhost'}
-    open-api-endpoints:
-      - '/premises/00000001'
-      - '/premises'
