@@ -1,7 +1,6 @@
 package com.robotutor.premisesService.controllers
 
 import com.robotutor.iot.utils.filters.annotations.RequirePolicy
-import com.robotutor.iot.utils.models.PremisesData
 import com.robotutor.iot.utils.models.UserData
 import com.robotutor.premisesService.controllers.view.PremisesRequest
 import com.robotutor.premisesService.controllers.view.PremisesView
@@ -22,17 +21,15 @@ class PremisesController(private val premisesService: PremisesService) {
         return premisesService.createPremises(premisesRequest, userData).map { PremisesView.from(it, userData.userId) }
     }
 
-    //    @RequirePolicy("PREMISES:READ")
+    @RequirePolicy("PREMISES:READ")
     @GetMapping
-    fun getAllPremises(): Flux<PremisesView> {
-        val userData = UserData("0000000001", "0001")
+    fun getAllPremises(userData: UserData): Flux<PremisesView> {
         return premisesService.getAllPremises(userData).map { PremisesView.from(it, userData.userId) }
     }
 
-    //    @RequirePolicy("PREMISES:READ")
+    @RequirePolicy("PREMISES:READ")
     @GetMapping("/{premisesId}")
-    fun getPremises(@PathVariable premisesId: PremisesId): Mono<PremisesView> {
-        val userData = UserData("0000000001", "0001")
+    fun getPremises(@PathVariable premisesId: PremisesId, userData: UserData): Mono<PremisesView> {
         return premisesService.getPremises(premisesId, userData).map { PremisesView.from(it, userData.userId) }
     }
 
@@ -42,7 +39,6 @@ class PremisesController(private val premisesService: PremisesService) {
         @PathVariable premisesId: PremisesId,
         @RequestBody @Validated premisesRequest: PremisesRequest,
         userData: UserData,
-        premisesData: PremisesData
     ): Mono<PremisesView> {
         return premisesService.updatePremises(premisesId, premisesRequest, userData).map {
             PremisesView.from(it, userData.userId)
