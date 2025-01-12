@@ -22,15 +22,17 @@ class PremisesController(private val premisesService: PremisesService) {
         return premisesService.createPremises(premisesRequest, userData).map { PremisesView.from(it, userData.userId) }
     }
 
-    @RequirePolicy("PREMISES:READ")
+    //    @RequirePolicy("PREMISES:READ")
     @GetMapping
-    fun getAllPremises(userData: UserData): Flux<PremisesView> {
+    fun getAllPremises(): Flux<PremisesView> {
+        val userData = UserData("0000000001", "0001")
         return premisesService.getAllPremises(userData).map { PremisesView.from(it, userData.userId) }
     }
 
-    @RequirePolicy("PREMISES:READ")
+    //    @RequirePolicy("PREMISES:READ")
     @GetMapping("/{premisesId}")
-    fun getPremises(@PathVariable premisesId: PremisesId, userData: UserData): Mono<PremisesView> {
+    fun getPremises(@PathVariable premisesId: PremisesId): Mono<PremisesView> {
+        val userData = UserData("0000000001", "0001")
         return premisesService.getPremises(premisesId, userData).map { PremisesView.from(it, userData.userId) }
     }
 

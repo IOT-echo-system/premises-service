@@ -4,6 +4,7 @@ import com.robotutor.iot.auditOnError
 import com.robotutor.iot.auditOnSuccess
 import com.robotutor.iot.exceptions.DataNotFoundException
 import com.robotutor.iot.exceptions.UnAuthorizedException
+import com.robotutor.iot.service.CacheService
 import com.robotutor.iot.service.IdGeneratorService
 import com.robotutor.iot.utils.createMono
 import com.robotutor.iot.utils.createMonoError
@@ -15,9 +16,6 @@ import com.robotutor.premisesService.controllers.view.PremisesRequest
 import com.robotutor.premisesService.exceptions.IOTError
 import com.robotutor.premisesService.models.*
 import com.robotutor.premisesService.repositories.PremisesRepository
-import org.springframework.cache.annotation.CacheEvict
-import org.springframework.cache.annotation.Cacheable
-import org.springframework.cache.annotation.Caching
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
@@ -27,47 +25,50 @@ import reactor.kotlin.core.publisher.switchIfEmpty
 class PremisesService(
     private val premisesRepository: PremisesRepository,
     private val idGeneratorService: IdGeneratorService,
+    private val cacheService: CacheService
 ) {
-
-    @CacheEvict(cacheNames = ["premises"], key = "#userData.userId")
     fun createPremises(premisesRequest: PremisesRequest, userData: UserData): Mono<Premises> {
         val premisesRequestMap = premisesRequest.toMap().toMutableMap()
-        return idGeneratorService.generateId(IdType.PREMISES_ID).flatMap { premisesId ->
-            premisesRequestMap["premisesId"] = premisesId
-            val premises = Premises.from(premisesId, premisesRequest, userData.userId)
-            premisesRepository.save(premises)
-                .auditOnSuccess("PREMISES_CREATE", premisesRequestMap)
-        }
+        return cacheService.evict("premises::${userData.userId}")
+            .flatMap {
+                idGeneratorService.generateId(IdType.PREMISES_ID).flatMap { premisesId ->
+                    premisesRequestMap["premisesId"] = premisesId
+                    val premises = Premises.from(premisesId, premisesRequest, userData.userId)
+                    cacheService.update("premises::$premisesId-${userData.userId}") {
+                        premisesRepository.save(premises)
+                    }
+                }
+            }
+            .auditOnSuccess("PREMISES_CREATE", premisesRequestMap)
             .auditOnError("PREMISES_CREATE", premisesRequestMap)
             .logOnSuccess("Successfully created premises!")
             .logOnError("", "Failed to create premises!")
     }
 
-    @Cacheable(cacheNames = ["premises"], key = "#userData.userId")
+
     fun getAllPremises(userData: UserData): Flux<Premises> {
-        return premisesRepository.findAllByUsers_UserId(userData.userId)
+        return cacheService.retrieves("premises::${userData.userId}") {
+            premisesRepository.findAllByUsers_UserId(userData.userId)
+        }
     }
 
-    @Cacheable(cacheNames = ["premises"], key = "#premisesId+'-'+#userData.userId")
     fun getPremises(premisesId: PremisesId, userData: UserData): Mono<Premises> {
-        return premisesRepository.findByPremisesIdAndUsers_UserId(premisesId, userData.userId)
-            .switchIfEmpty {
-                createMonoError(DataNotFoundException(IOTError.IOT0401))
-            }
+        return cacheService.retrieve("premises::$premisesId-${userData.userId}") {
+            premisesRepository.findByPremisesIdAndUsers_UserId(premisesId, userData.userId)
+                .switchIfEmpty {
+                    createMonoError(DataNotFoundException(IOTError.IOT0401))
+                }
+        }
     }
 
-    @Caching(
-        evict = [
-            CacheEvict(cacheNames = ["premises"], key = "#userData.userId"),
-            CacheEvict(cacheNames = ["premises"], key = "#premisesId + '-' + #userData.userId")
-        ]
-    )
     fun updatePremises(premisesId: PremisesId, premisesRequest: PremisesRequest, userData: UserData): Mono<Premises> {
         val premisesRequestMap = premisesRequest.toMap().toMutableMap()
         premisesRequestMap["premisesId"] = premisesId
         return this.getPremisesForOwner(premisesId, userData)
-            .flatMap {
-                premisesRepository.save(it.update(premisesRequest))
+            .flatMap { premises ->
+                cacheService.update("premises::$premisesId-${userData.userId}") {
+                    premisesRepository.save(premises.update(premisesRequest))
+                }
             }
             .auditOnSuccess("PREMISES_UPDATE", premisesRequestMap)
             .auditOnError("PREMISES_UPDATE", premisesRequestMap)
@@ -75,16 +76,12 @@ class PremisesService(
             .logOnError("", "Failed to update premises!", additionalDetails = premisesRequestMap)
     }
 
-    @Caching(
-        evict = [CacheEvict(
-            cacheNames = ["premises"],
-            key = "#userData.userId"
-        ), CacheEvict(cacheNames = ["premises"], key = "#zone.premisesId + '-' + #userData.userId")]
-    )
     fun addZone(zone: Zone, userData: UserData): Mono<Premises> {
         return premisesRepository.findByPremisesIdAndUsers_UserId(zone.premisesId, userData.userId)
             .flatMap { premises ->
-                premisesRepository.save(premises.addZone(zone.zoneId))
+                cacheService.update("premises::${premises.premisesId}-${userData.userId}") {
+                    premisesRepository.save(premises.addZone(zone.zoneId))
+                }
             }
     }
 

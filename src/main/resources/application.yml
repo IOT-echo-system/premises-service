@@ -6,12 +6,12 @@ spring:
     mongodb:
       uri: ${MONGODB_URL}/premises-service
     redis:
-      host: ${REDIS_HOST}
-      port: ${REDIS_PORT}
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
   application:
     name: PREMISES-SERVICE
   kafka:
-    bootstrap-servers: ${KAFKA_BOOTSTRAP_BROKERS:localhost:3030}
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_BROKERS:"192.168.1.102:3030"}
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
@@ -25,6 +25,9 @@ spring:
 
 app:
   utils:
-    auth-service-base-url: ${AUTH_SERVICE_BASE_URL}
-    internal-access-token: ${INTERNAL_ACCESS_TOKEN}
-    premises-service-base-url: ${PREMISES_SERVICE_BASE_URL}
+    auth-service-base-url: ${AUTH_SERVICE_BASE_URL:localhost}
+    internal-access-token: ${INTERNAL_ACCESS_TOKEN:localhost}
+    premises-service-base-url: ${PREMISES_SERVICE_BASE_URL:localhost'}
+    open-api-endpoints:
+      - '/premises/00000001'
+      - '/premises'
