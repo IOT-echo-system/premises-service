@@ -15,6 +15,9 @@ import com.robotutor.premisesService.controllers.view.PremisesRequest
 import com.robotutor.premisesService.exceptions.IOTError
 import com.robotutor.premisesService.models.*
 import com.robotutor.premisesService.repositories.PremisesRepository
+import org.springframework.cache.annotation.CacheEvict
+import org.springframework.cache.annotation.Cacheable
+import org.springframework.cache.annotation.Caching
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
@@ -25,6 +28,8 @@ class PremisesService(
     private val premisesRepository: PremisesRepository,
     private val idGeneratorService: IdGeneratorService,
 ) {
+
+    @CacheEvict(cacheNames = ["premises"], key = "#userData.userId")
     fun createPremises(premisesRequest: PremisesRequest, userData: UserData): Mono<Premises> {
         val premisesRequestMap = premisesRequest.toMap().toMutableMap()
         return idGeneratorService.generateId(IdType.PREMISES_ID).flatMap { premisesId ->
@@ -38,10 +43,12 @@ class PremisesService(
             .logOnError("", "Failed to create premises!")
     }
 
+    @Cacheable(cacheNames = ["premises"], key = "#userData.userId")
     fun getAllPremises(userData: UserData): Flux<Premises> {
         return premisesRepository.findAllByUsers_UserId(userData.userId)
     }
 
+    @Cacheable(cacheNames = ["premises"], key = "#premisesId+'-'+#userData.userId")
     fun getPremises(premisesId: PremisesId, userData: UserData): Mono<Premises> {
         return premisesRepository.findByPremisesIdAndUsers_UserId(premisesId, userData.userId)
             .switchIfEmpty {
@@ -49,21 +56,12 @@ class PremisesService(
             }
     }
 
-    fun getPremisesForOwner(premisesId: PremisesId, userData: UserData): Mono<Premises> {
-        return premisesRepository.findByPremisesIdAndUsers_UserId(premisesId, userData.userId)
-            .flatMap { premises ->
-                val currentUser = premises.users.find { it.userId == userData.userId }!!
-                if (currentUser.role == Role.OWNER) {
-                    createMono(premises)
-                } else {
-                    createMonoError(UnAuthorizedException(IOTError.IOT0402))
-                }
-            }
-            .switchIfEmpty {
-                createMonoError(DataNotFoundException(IOTError.IOT0401))
-            }
-    }
-
+    @Caching(
+        evict = [
+            CacheEvict(cacheNames = ["premises"], key = "#userData.userId"),
+            CacheEvict(cacheNames = ["premises"], key = "#premisesId + '-' + #userData.userId")
+        ]
+    )
     fun updatePremises(premisesId: PremisesId, premisesRequest: PremisesRequest, userData: UserData): Mono<Premises> {
         val premisesRequestMap = premisesRequest.toMap().toMutableMap()
         premisesRequestMap["premisesId"] = premisesId
@@ -77,10 +75,31 @@ class PremisesService(
             .logOnError("", "Failed to update premises!", additionalDetails = premisesRequestMap)
     }
 
+    @Caching(
+        evict = [CacheEvict(
+            cacheNames = ["premises"],
+            key = "#userData.userId"
+        ), CacheEvict(cacheNames = ["premises"], key = "#zone.premisesId + '-' + #userData.userId")]
+    )
     fun addZone(zone: Zone, userData: UserData): Mono<Premises> {
         return premisesRepository.findByPremisesIdAndUsers_UserId(zone.premisesId, userData.userId)
-            .flatMap { premises->
+            .flatMap { premises ->
                 premisesRepository.save(premises.addZone(zone.zoneId))
+            }
+    }
+
+    private fun getPremisesForOwner(premisesId: PremisesId, userData: UserData): Mono<Premises> {
+        return premisesRepository.findByPremisesIdAndUsers_UserId(premisesId, userData.userId)
+            .flatMap { premises ->
+                val currentUser = premises.users.find { it.userId == userData.userId }!!
+                if (currentUser.role == Role.OWNER) {
+                    createMono(premises)
+                } else {
+                    createMonoError(UnAuthorizedException(IOTError.IOT0402))
+                }
+            }
+            .switchIfEmpty {
+                createMonoError(DataNotFoundException(IOTError.IOT0401))
             }
     }
 }

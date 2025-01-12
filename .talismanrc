@@ -3,4 +3,6 @@ fileignoreconfig:
   checksum: 1dd1bd372faeea440142b868db53bcc2257323481ffd6de80f66d44f18a453aa
 - filename: src/main/resources/application.yml
   checksum: 48218e9f937958320a4aab5aae3c65562db57516e93eee8d47d41111133bd963
+- filename: src/main/kotlin/com/robotutor/premisesService/services/PremisesService.kt
+  checksum: 48efd7744c66b3eea4bd416a959014975817713fd2086082c779911a00ccf907
 version: ""

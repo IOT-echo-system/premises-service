@@ -5,6 +5,9 @@ spring:
   data:
     mongodb:
       uri: ${MONGODB_URL}/premises-service
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
   application:
     name: PREMISES-SERVICE
   kafka:

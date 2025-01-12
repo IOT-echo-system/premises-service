@@ -20,6 +20,7 @@ import com.robotutor.premisesService.models.PremisesId
 import com.robotutor.premisesService.models.Zone
 import com.robotutor.premisesService.models.ZoneId
 import com.robotutor.premisesService.repositories.ZoneRepository
+import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
@@ -30,6 +31,7 @@ class ZoneService(
     private val zoneRepository: ZoneRepository,
     private val idGeneratorService: IdGeneratorService,
 ) {
+
     fun createZone(zoneRequest: ZoneRequest, userData: UserData, premisesData: PremisesData): Mono<Zone> {
         val zoneRequestMap = userData.toMap().toMutableMap()
         zoneRequestMap["premisesId"] = premisesData.premisesId
