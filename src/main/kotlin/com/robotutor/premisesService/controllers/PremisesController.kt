@@ -30,7 +30,7 @@ class PremisesController(private val premisesService: PremisesService) {
     @RequirePolicy("PREMISES:READ")
     @GetMapping("/{premisesId}")
     fun getPremises(@PathVariable premisesId: PremisesId, userData: UserData): Mono<PremisesView> {
-        println("------------$premisesId-----${userData}----------------")
+        println("------in premises controller------$premisesId-----${userData}----------------")
         return premisesService.getPremises(premisesId, userData).map { PremisesView.from(it, userData.userId) }
     }
 
