@@ -47,7 +47,7 @@ class PremisesService(
 
 
     fun getAllPremises(userData: UserData): Flux<Premises> {
-        return cacheService.retrieves("premises::${userData.userId}") {
+        return cacheService.retrieves("premises::${userData.userId}", Premises::class.java) {
             premisesRepository.findAllByUsers_UserId(userData.userId)
         }
     }
