@@ -2,13 +2,8 @@ package com.robotutor.premisesService.services
 
 import com.robotutor.iot.auditOnError
 import com.robotutor.iot.auditOnSuccess
-import com.robotutor.iot.exceptions.UnAuthorizedException
-import com.robotutor.iot.models.AddWidgetMessage
 import com.robotutor.iot.service.IdGeneratorService
-import com.robotutor.iot.utils.createMono
-import com.robotutor.iot.utils.createMonoError
-import com.robotutor.iot.utils.exceptions.IOTError
-import com.robotutor.iot.utils.gateway.views.PremisesRole
+import com.robotutor.iot.utils.filters.validatePremisesOwner
 import com.robotutor.iot.utils.models.PremisesData
 import com.robotutor.iot.utils.models.UserData
 import com.robotutor.iot.utils.utils.toMap
@@ -21,6 +16,7 @@ import com.robotutor.premisesService.models.PremisesId
 import com.robotutor.premisesService.models.Zone
 import com.robotutor.premisesService.models.ZoneId
 import com.robotutor.premisesService.repositories.ZoneRepository
+import com.robotutor.premisesService.services.kafka.AddWidgetMessage
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
@@ -35,11 +31,7 @@ class ZoneService(
     fun createZone(zoneRequest: ZoneRequest, userData: UserData, premisesData: PremisesData): Mono<Zone> {
         val zoneRequestMap = userData.toMap().toMutableMap()
         zoneRequestMap["premisesId"] = premisesData.premisesId
-        return createMono(premisesData.user.role == PremisesRole.OWNER)
-            .flatMap {
-                if (it) idGeneratorService.generateId(IdType.ZONE_ID)
-                else createMonoError(UnAuthorizedException(IOTError.IOT0104))
-            }
+        return validatePremisesOwner(premisesData) { idGeneratorService.generateId(IdType.ZONE_ID) }
             .flatMap { zoneId ->
                 zoneRequestMap["zoneId"] = zoneId
                 val zone = Zone(zoneId = zoneId, premisesId = premisesData.premisesId, name = zoneRequest.name)
@@ -76,11 +68,9 @@ class ZoneService(
         zoneRequestMap["zoneId"] = zoneId
         zoneRequestMap["premisesId"] = premisesData.premisesId
 
-        return createMono(premisesData.user.role == PremisesRole.OWNER)
-            .flatMap {
-                if (it) zoneRepository.findByPremisesIdAndZoneId(premisesData.premisesId, zoneId)
-                else createMonoError(UnAuthorizedException(IOTError.IOT0104))
-            }
+        return validatePremisesOwner(premisesData) {
+            zoneRepository.findByPremisesIdAndZoneId(premisesData.premisesId, zoneId)
+        }
             .flatMap { zone ->
                 zoneRepository.save(zone.updateName(zoneRequest.name))
             }
@@ -91,10 +81,14 @@ class ZoneService(
     }
 
     fun addWidget(message: AddWidgetMessage, premisesData: PremisesData, userData: UserData): Mono<Zone> {
-        return zoneRepository.findByPremisesIdAndZoneId(premisesData.premisesId, message.zoneId)
+        return validatePremisesOwner(premisesData) {
+            zoneRepository.findByPremisesIdAndZoneId(premisesData.premisesId, message.zoneId)
+        }
             .flatMap {
                 zoneRepository.save(it.addWidget(message.widgetId))
             }
+            .logOnSuccess(logger, "Successfully added new widget in zone")
+            .logOnError(logger, "", "Failed to add new widget in zone")
     }
 }
 

@@ -7,6 +7,8 @@ import com.robotutor.iot.exceptions.UnAuthorizedException
 import com.robotutor.iot.service.IdGeneratorService
 import com.robotutor.iot.utils.createMono
 import com.robotutor.iot.utils.createMonoError
+import com.robotutor.iot.utils.filters.validatePremisesOwner
+import com.robotutor.iot.utils.models.PremisesData
 import com.robotutor.iot.utils.models.UserData
 import com.robotutor.iot.utils.utils.toMap
 import com.robotutor.loggingstarter.Logger
@@ -16,6 +18,7 @@ import com.robotutor.premisesService.controllers.view.PremisesRequest
 import com.robotutor.premisesService.exceptions.IOTError
 import com.robotutor.premisesService.models.*
 import com.robotutor.premisesService.repositories.PremisesRepository
+import com.robotutor.premisesService.services.kafka.AddBoardMessage
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
@@ -85,6 +88,17 @@ class PremisesService(
             .switchIfEmpty {
                 createMonoError(DataNotFoundException(IOTError.IOT0401))
             }
+    }
+
+    fun addBoard(addBoardMessage: AddBoardMessage, userData: UserData, premisesData: PremisesData): Mono<Premises> {
+        return validatePremisesOwner(premisesData) {
+            premisesRepository.findByPremisesIdAndUsers_UserId(premisesData.premisesId, premisesData.user.userId)
+        }
+            .flatMap { premises ->
+                premisesRepository.save(premises.addBoard(addBoardMessage.boardId))
+            }
+            .logOnSuccess(logger, "Successfully added new board in premises")
+            .logOnError(logger, "", "Failed to add new board in premises")
     }
 }
 
