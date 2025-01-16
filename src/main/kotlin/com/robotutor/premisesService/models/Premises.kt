@@ -23,7 +23,8 @@ data class Premises(
     val address: Address,
     val users: List<UserWithRole>,
     val createdAt: LocalDateTime = LocalDateTime.now(),
-    val zones: Set<ZoneId> = emptySet()
+    val zones: Set<ZoneId> = emptySet(),
+    val boards: Set<BoardId> = emptySet()
 ) {
     fun update(premisesRequest: PremisesRequest): Premises {
         this.name = premisesRequest.name
@@ -33,6 +34,11 @@ data class Premises(
 
     fun addZone(zoneId: ZoneId): Premises {
         this.zones.plus(zoneId)
+        return this
+    }
+
+    fun addBoard(boardId: BoardId): Premises {
+        this.boards.plus(boardId)
         return this
     }
 
@@ -86,4 +92,5 @@ enum class Role {
 
 typealias PremisesId = String
 typealias UserId = String
+typealias BoardId = String
 

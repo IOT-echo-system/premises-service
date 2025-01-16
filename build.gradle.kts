@@ -34,15 +34,10 @@ repositories {
 }
 
 dependencies {
-//    implementation("com.google.code.gson:gson:2.8.9")
     implementation("org.springframework.boot:spring-boot-starter-data-mongodb-reactive")
     implementation("org.springframework.boot:spring-boot-starter-webflux")
-//    implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("io.projectreactor.kotlin:reactor-kotlin-extensions")
-//    implementation("org.jetbrains.kotlin:kotlin-reflect")
-//    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
     implementation("org.springframework.boot:spring-boot-starter-validation")
-//    implementation("org.springframework.security:spring-security-crypto:5.6.4")
     implementation("com.robotutor:robotutor-tech-utils:1.0.39")
     implementation("com.robotutor:kafka-starter:1.0.11")
     implementation("com.robotutor:logging-starter:1.0.5")

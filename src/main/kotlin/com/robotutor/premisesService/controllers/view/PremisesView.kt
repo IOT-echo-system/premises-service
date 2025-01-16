@@ -1,9 +1,6 @@
 package com.robotutor.premisesService.controllers.view
 
-import com.robotutor.premisesService.models.Address
-import com.robotutor.premisesService.models.Premises
-import com.robotutor.premisesService.models.PremisesId
-import com.robotutor.premisesService.models.UserWithRole
+import com.robotutor.premisesService.models.*
 import jakarta.validation.Valid
 import jakarta.validation.constraints.Max
 import jakarta.validation.constraints.Min
@@ -45,6 +42,8 @@ data class PremisesView(
     val address: Address,
     val createdAt: LocalDateTime,
     val user: UserWithRole,
+    val zones: List<ZoneId>,
+    val boards: List<BoardId>
 ) {
     companion object {
         fun from(premises: Premises, userId: String): PremisesView {
@@ -53,7 +52,9 @@ data class PremisesView(
                 name = premises.name,
                 address = premises.address,
                 createdAt = premises.createdAt,
-                user = premises.users.find { it.userId == userId }!!
+                user = premises.users.find { it.userId == userId }!!,
+                zones = premises.zones.toList(),
+                boards = premises.boards.toList()
             )
         }
     }

@@ -4,7 +4,6 @@ import com.robotutor.iot.auditOnError
 import com.robotutor.iot.auditOnSuccess
 import com.robotutor.iot.exceptions.DataNotFoundException
 import com.robotutor.iot.exceptions.UnAuthorizedException
-import com.robotutor.iot.service.CacheService
 import com.robotutor.iot.service.IdGeneratorService
 import com.robotutor.iot.utils.createMono
 import com.robotutor.iot.utils.createMonoError
@@ -26,21 +25,15 @@ import reactor.kotlin.core.publisher.switchIfEmpty
 class PremisesService(
     private val premisesRepository: PremisesRepository,
     private val idGeneratorService: IdGeneratorService,
-    private val cacheService: CacheService
 ) {
     val logger = Logger(this::class.java)
     fun createPremises(premisesRequest: PremisesRequest, userData: UserData): Mono<Premises> {
         val premisesRequestMap = premisesRequest.toMap().toMutableMap()
-        return cacheService.evict("premises::${userData.userId}")
-            .flatMap {
-                idGeneratorService.generateId(IdType.PREMISES_ID).flatMap { premisesId ->
-                    premisesRequestMap["premisesId"] = premisesId
-                    val premises = Premises.from(premisesId, premisesRequest, userData.userId)
-                    cacheService.update("premises::$premisesId-${userData.userId}") {
-                        premisesRepository.save(premises)
-                    }
-                }
-            }
+        return idGeneratorService.generateId(IdType.PREMISES_ID).flatMap { premisesId ->
+            premisesRequestMap["premisesId"] = premisesId
+            val premises = Premises.from(premisesId, premisesRequest, userData.userId)
+            premisesRepository.save(premises)
+        }
             .auditOnSuccess("PREMISES_CREATE", premisesRequestMap)
             .auditOnError("PREMISES_CREATE", premisesRequestMap)
             .logOnSuccess(logger, "Successfully created premises!")
@@ -49,18 +42,14 @@ class PremisesService(
 
 
     fun getAllPremises(userData: UserData): Flux<Premises> {
-        return cacheService.retrieves("premises::${userData.userId}", Premises::class.java) {
-            premisesRepository.findAllByUsers_UserId(userData.userId)
-        }
+        return premisesRepository.findAllByUsers_UserId(userData.userId)
     }
 
     fun getPremises(premisesId: PremisesId, userData: UserData): Mono<Premises> {
-        return cacheService.retrieve("premises::$premisesId-${userData.userId}", Premises::class.java) {
-            premisesRepository.findByPremisesIdAndUsers_UserId(premisesId, userData.userId)
-                .switchIfEmpty {
-                    createMonoError(DataNotFoundException(IOTError.IOT0401))
-                }
-        }
+        return premisesRepository.findByPremisesIdAndUsers_UserId(premisesId, userData.userId)
+            .switchIfEmpty {
+                createMonoError(DataNotFoundException(IOTError.IOT0401))
+            }
     }
 
     fun updatePremises(premisesId: PremisesId, premisesRequest: PremisesRequest, userData: UserData): Mono<Premises> {
@@ -68,9 +57,7 @@ class PremisesService(
         premisesRequestMap["premisesId"] = premisesId
         return this.getPremisesForOwner(premisesId, userData)
             .flatMap { premises ->
-                cacheService.update("premises::$premisesId-${userData.userId}") {
-                    premisesRepository.save(premises.update(premisesRequest))
-                }
+                premisesRepository.save(premises.update(premisesRequest))
             }
             .auditOnSuccess("PREMISES_UPDATE", premisesRequestMap)
             .auditOnError("PREMISES_UPDATE", premisesRequestMap)
@@ -81,9 +68,7 @@ class PremisesService(
     fun addZone(zone: Zone, userData: UserData): Mono<Premises> {
         return premisesRepository.findByPremisesIdAndUsers_UserId(zone.premisesId, userData.userId)
             .flatMap { premises ->
-                cacheService.update("premises::${premises.premisesId}-${userData.userId}") {
-                    premisesRepository.save(premises.addZone(zone.zoneId))
-                }
+                premisesRepository.save(premises.addZone(zone.zoneId))
             }
     }
 

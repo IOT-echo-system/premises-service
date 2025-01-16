@@ -44,14 +44,14 @@ class ZoneService(
                 zoneRequestMap["zoneId"] = zoneId
                 val zone = Zone(zoneId = zoneId, premisesId = premisesData.premisesId, name = zoneRequest.name)
                 zoneRepository.save(zone)
-                    .auditOnSuccess("ZONE_CREATE", zoneRequestMap)
             }
             .flatMap { zone ->
                 premisesService.addZone(zone, userData).map { zone }
             }
+            .auditOnSuccess("ZONE_CREATE", zoneRequestMap)
             .auditOnError("ZONE_CREATE", zoneRequestMap)
-            .logOnSuccess(logger, "Successfully added a zone in premises $zoneRequest")
-            .logOnError(logger, "", "Failed to add a zone in premises $zoneRequest")
+            .logOnSuccess(logger, "Successfully added a zone in premises ${premisesData.premisesId}")
+            .logOnError(logger, "", "Failed to add a zone in premises ${premisesData.premisesId}")
     }
 
     fun getZonesByPremisesId(premisesId: PremisesId, userData: UserData): Flux<Zone> {
@@ -83,8 +83,8 @@ class ZoneService(
             }
             .flatMap { zone ->
                 zoneRepository.save(zone.updateName(zoneRequest.name))
-                    .auditOnSuccess("ZONE_UPDATE", zoneRequestMap)
             }
+            .auditOnSuccess("ZONE_UPDATE", zoneRequestMap)
             .auditOnError("ZONE_UPDATE", zoneRequestMap)
             .logOnSuccess(logger, "Successfully updated a zone name", additionalDetails = zoneRequestMap)
             .logOnError(logger, "", "Failed to update zone name", additionalDetails = zoneRequestMap)
