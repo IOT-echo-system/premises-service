@@ -10,6 +10,7 @@ import com.robotutor.iot.utils.createMono
 import com.robotutor.iot.utils.createMonoError
 import com.robotutor.iot.utils.models.UserData
 import com.robotutor.iot.utils.utils.toMap
+import com.robotutor.loggingstarter.Logger
 import com.robotutor.loggingstarter.logOnError
 import com.robotutor.loggingstarter.logOnSuccess
 import com.robotutor.premisesService.controllers.view.PremisesRequest
@@ -27,6 +28,7 @@ class PremisesService(
     private val idGeneratorService: IdGeneratorService,
     private val cacheService: CacheService
 ) {
+    val logger = Logger(this::class.java)
     fun createPremises(premisesRequest: PremisesRequest, userData: UserData): Mono<Premises> {
         val premisesRequestMap = premisesRequest.toMap().toMutableMap()
         return cacheService.evict("premises::${userData.userId}")
@@ -41,8 +43,8 @@ class PremisesService(
             }
             .auditOnSuccess("PREMISES_CREATE", premisesRequestMap)
             .auditOnError("PREMISES_CREATE", premisesRequestMap)
-            .logOnSuccess("Successfully created premises!")
-            .logOnError("", "Failed to create premises!")
+            .logOnSuccess(logger, "Successfully created premises!")
+            .logOnError(logger, "", "Failed to create premises!")
     }
 
 
@@ -72,8 +74,8 @@ class PremisesService(
             }
             .auditOnSuccess("PREMISES_UPDATE", premisesRequestMap)
             .auditOnError("PREMISES_UPDATE", premisesRequestMap)
-            .logOnSuccess("Successfully updated premises!", additionalDetails = premisesRequestMap)
-            .logOnError("", "Failed to update premises!", additionalDetails = premisesRequestMap)
+            .logOnSuccess(logger, "Successfully updated premises!", additionalDetails = premisesRequestMap)
+            .logOnError(logger, "", "Failed to update premises!", additionalDetails = premisesRequestMap)
     }
 
     fun addZone(zone: Zone, userData: UserData): Mono<Premises> {

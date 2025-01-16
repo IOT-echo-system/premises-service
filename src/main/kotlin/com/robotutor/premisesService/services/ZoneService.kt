@@ -12,6 +12,7 @@ import com.robotutor.iot.utils.gateway.views.PremisesRole
 import com.robotutor.iot.utils.models.PremisesData
 import com.robotutor.iot.utils.models.UserData
 import com.robotutor.iot.utils.utils.toMap
+import com.robotutor.loggingstarter.Logger
 import com.robotutor.loggingstarter.logOnError
 import com.robotutor.loggingstarter.logOnSuccess
 import com.robotutor.premisesService.controllers.view.ZoneRequest
@@ -30,7 +31,7 @@ class ZoneService(
     private val zoneRepository: ZoneRepository,
     private val idGeneratorService: IdGeneratorService,
 ) {
-
+    val logger = Logger(this::class.java)
     fun createZone(zoneRequest: ZoneRequest, userData: UserData, premisesData: PremisesData): Mono<Zone> {
         val zoneRequestMap = userData.toMap().toMutableMap()
         zoneRequestMap["premisesId"] = premisesData.premisesId
@@ -49,8 +50,8 @@ class ZoneService(
                 premisesService.addZone(zone, userData).map { zone }
             }
             .auditOnError("ZONE_CREATE", zoneRequestMap)
-            .logOnSuccess("Successfully added a zone in premises $zoneRequest")
-            .logOnError("", "Failed to add a zone in premises $zoneRequest")
+            .logOnSuccess(logger, "Successfully added a zone in premises $zoneRequest")
+            .logOnError(logger, "", "Failed to add a zone in premises $zoneRequest")
     }
 
     fun getZonesByPremisesId(premisesId: PremisesId, userData: UserData): Flux<Zone> {
@@ -85,8 +86,8 @@ class ZoneService(
                     .auditOnSuccess("ZONE_UPDATE", zoneRequestMap)
             }
             .auditOnError("ZONE_UPDATE", zoneRequestMap)
-            .logOnSuccess("Successfully updated a zone name", additionalDetails = zoneRequestMap)
-            .logOnError("", "Failed to update zone name", additionalDetails = zoneRequestMap)
+            .logOnSuccess(logger, "Successfully updated a zone name", additionalDetails = zoneRequestMap)
+            .logOnError(logger, "", "Failed to update zone name", additionalDetails = zoneRequestMap)
     }
 
     fun addWidget(message: AddWidgetMessage, premisesData: PremisesData, userData: UserData): Mono<Zone> {
