@@ -11,7 +11,7 @@ spring:
   application:
     name: PREMISES-SERVICE
   kafka:
-    bootstrap-servers: ${KAFKA_BOOTSTRAP_BROKERS:"192.168.1.102:3030"}
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_BROKERS:192.168.1.102:3030}
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
