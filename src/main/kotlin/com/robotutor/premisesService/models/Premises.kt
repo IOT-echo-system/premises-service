@@ -21,10 +21,10 @@ data class Premises(
     var name: String,
     val createdBy: UserId,
     val address: Address,
-    val users: List<UserWithRole>,
+    val users: MutableList<UserWithRole>,
     val createdAt: LocalDateTime = LocalDateTime.now(),
-    val zones: Set<ZoneId> = emptySet(),
-    val boards: Set<BoardId> = emptySet()
+    val zones: MutableSet<ZoneId> = mutableSetOf(),
+    val boards: MutableSet<BoardId> = mutableSetOf()
 ) {
     fun update(premisesRequest: PremisesRequest): Premises {
         this.name = premisesRequest.name
@@ -33,12 +33,12 @@ data class Premises(
     }
 
     fun addZone(zoneId: ZoneId): Premises {
-        this.zones.plus(zoneId)
+        this.zones.add(zoneId)
         return this
     }
 
     fun addBoard(boardId: BoardId): Premises {
-        this.boards.plus(boardId)
+        this.boards.add(boardId)
         return this
     }
 
@@ -48,7 +48,7 @@ data class Premises(
                 premisesId = premisesId,
                 name = premisesRequest.name,
                 address = Address.from(premisesRequest.address),
-                users = listOf(UserWithRole(userId, Role.OWNER)),
+                users = mutableListOf(UserWithRole(userId, Role.OWNER)),
                 createdBy = userId
             )
         }
