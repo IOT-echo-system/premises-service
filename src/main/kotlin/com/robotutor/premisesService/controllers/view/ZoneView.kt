@@ -16,10 +16,16 @@ data class ZoneView(
     val zoneId: ZoneId,
     val premisesId: PremisesId,
     val name: String,
+    val widgets: Set<String>
 ) {
     companion object {
         fun from(zone: Zone): ZoneView {
-            return ZoneView(zoneId = zone.zoneId, premisesId = zone.premisesId, name = zone.name)
+            return ZoneView(
+                zoneId = zone.zoneId,
+                premisesId = zone.premisesId,
+                name = zone.name,
+                widgets = zone.widgets
+            )
         }
     }
 }
