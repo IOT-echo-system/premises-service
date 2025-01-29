@@ -80,15 +80,17 @@ class ZoneService(
             .logOnError(logger, "", "Failed to update zone name", additionalDetails = zoneRequestMap)
     }
 
-    fun addWidget(message: AddWidgetMessage, premisesData: PremisesData, userData: UserData): Mono<Zone> {
+    fun addWidget(message: AddWidgetMessage, premisesData: PremisesData): Mono<Zone> {
         return validatePremisesOwner(premisesData) {
             zoneRepository.findByPremisesIdAndZoneId(premisesData.premisesId, message.zoneId)
         }
             .flatMap {
                 zoneRepository.save(it.addWidget(message.widgetId))
             }
-            .logOnSuccess(logger, "Successfully added new widget in zone")
-            .logOnError(logger, "", "Failed to add new widget in zone")
+            .auditOnSuccess("ADD_WIDGET_IN_ZONE", message.toMap())
+            .auditOnError("ADD_WIDGET_IN_ZONE", message.toMap())
+            .logOnSuccess(logger, "Successfully added new widget in zone", additionalDetails = message.toMap())
+            .logOnError(logger, "", "Failed to add new widget in zone", additionalDetails = message.toMap())
     }
 }
 

@@ -19,7 +19,7 @@ data class Zone(
     val premisesId: PremisesId,
     var name: String,
     val createdAt: LocalDateTime = LocalDateTime.now(),
-    val widgets: Set<String> = emptySet()
+    val widgets: MutableSet<String> = mutableSetOf()
 ) {
     fun updateName(name: String): Zone {
         this.name = name
@@ -27,7 +27,7 @@ data class Zone(
     }
 
     fun addWidget(widgetId: String): Zone {
-        this.widgets.plus(widgetId)
+        this.widgets.add(widgetId)
         return this
     }
 }

@@ -90,15 +90,21 @@ class PremisesService(
             }
     }
 
-    fun addBoard(addBoardMessage: AddBoardMessage, userData: UserData, premisesData: PremisesData): Mono<Premises> {
+    fun addBoard(addBoardMessage: AddBoardMessage, premisesData: PremisesData): Mono<Premises> {
         return validatePremisesOwner(premisesData) {
             premisesRepository.findByPremisesIdAndUsers_UserId(premisesData.premisesId, premisesData.user.userId)
         }
             .flatMap { premises ->
                 premisesRepository.save(premises.addBoard(addBoardMessage.boardId))
             }
-            .logOnSuccess(logger, "Successfully added new board in premises")
-            .logOnError(logger, "", "Failed to add new board in premises")
+            .auditOnSuccess("ADD_BOARD_IN_PREMISES", addBoardMessage.toMap())
+            .auditOnError("ADD_BOARD_IN_PREMISES", addBoardMessage.toMap())
+            .logOnSuccess(
+                logger,
+                "Successfully added new board in premises",
+                additionalDetails = addBoardMessage.toMap()
+            )
+            .logOnError(logger, "", "Failed to add new board in premises", additionalDetails = addBoardMessage.toMap())
     }
 }
 
